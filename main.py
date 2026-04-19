@@ -10,6 +10,9 @@ data = pd.read_csv("data.csv", skiprows=2)
 
 data.columns = ['Date', 'Rainfall', 'Inflow', 'Outflow', 'Streamflow', 'Q1', 'Q2']
 
+# FIX: handle '-' values
+data = data.replace('-', pd.NA)
+
 for col in ['Rainfall', 'Inflow', 'Streamflow', 'Q1', 'Q2']:
     data[col] = pd.to_numeric(data[col], errors='coerce')
 
@@ -95,7 +98,11 @@ elif choice == 2:
     q1 = float(input("Enter Q(t-1) (MCM): "))
     q2 = float(input("Enter Q(t-2) (MCM): "))
 
-    pred = model.predict([[rain, inflow, q1, q2]])[0]
+    # FIX: Use DataFrame (removes warning)
+    input_data = pd.DataFrame([[rain, inflow, q1, q2]],
+                              columns=['Rainfall', 'Inflow', 'Q1', 'Q2'])
+
+    pred = model.predict(input_data)[0]
 
     print(f"\nPredicted Streamflow = {pred:.2f} MCM")
 
@@ -113,7 +120,10 @@ elif choice == 3:
     future = []
 
     for i in range(5):
-        next_val = model.predict([[rain, inflow, q1, q2]])[0]
+        input_data = pd.DataFrame([[rain, inflow, q1, q2]],
+                                  columns=['Rainfall', 'Inflow', 'Q1', 'Q2'])
+
+        next_val = model.predict(input_data)[0]
         future.append(next_val)
 
         q2 = q1
